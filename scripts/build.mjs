@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Bundles src/ into one self-contained dist/index.html (styles and scripts inlined),
 // Usage: node scripts/build.mjs [--watch]
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, watch } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, copyFileSync, existsSync, watch } from 'node:fs';
 import { join, relative, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -52,6 +52,9 @@ export function build() {
     .replace('<!-- @scripts -->', () => scripts.join('\n'));
   mkdirSync(dirname(OUT), { recursive: true });
   writeFileSync(OUT, html);
+  // files in public/ (e.g. the Search Console verification file) are served from the site root
+  const PUB = join(ROOT, 'public');
+  if (existsSync(PUB)) for (const f of readdirSync(PUB)) copyFileSync(join(PUB, f), join(ROOT, 'dist', f));
   return { out: relative(ROOT, OUT), bytes: html.length, scripts: scripts.length };
 }
 
